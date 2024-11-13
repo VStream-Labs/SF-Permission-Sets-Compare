@@ -25,9 +25,10 @@ const App = () => {
       const response = await axios.post('http://localhost:5000/compare', formData);
       console.log('Response Data:', response.data); // Log the response data
 
-      const changesArray = Object.entries(response.data.changes).map(([field, change]) => ({
+      const changesArray = Object.entries(response.data.changes).map(([field, { change, file }]) => ({
         field,
         change,
+        file,
       }));
       console.log('Transformed Data:', changesArray); // Log the transformed data
 

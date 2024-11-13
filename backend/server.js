@@ -68,7 +68,7 @@ const parsePermissions = (xml) => {
   return permissions;
 };
 
-const comparePermissions = (perm1, perm2) => {
+const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
   const changes = {};
   const allKeys = new Set([...Object.keys(perm1), ...Object.keys(perm2)]);
 
@@ -77,13 +77,13 @@ const comparePermissions = (perm1, perm2) => {
 
     subKeys.forEach((subKey) => {
       if (!perm1[key] || !perm1[key][subKey]) {
-        changes[`${key}.${subKey}`] = 'Created';
+        changes[`${key}.${subKey}`] = { change: 'Created', file: file2Name };
       } else if (!perm2[key] || !perm2[key][subKey]) {
-        changes[`${key}.${subKey}`] = 'Deleted';
+        changes[`${key}.${subKey}`] = { change: 'Deleted', file: file1Name };
       } else if (JSON.stringify(perm1[key][subKey]) !== JSON.stringify(perm2[key][subKey])) {
-        changes[`${key}.${subKey}`] = 'Changed';
+        changes[`${key}.${subKey}`] = { change: 'Changed', file: `${file1Name}, ${file2Name}` };
       } else {
-        changes[`${key}.${subKey}`] = 'Unchanged';
+        changes[`${key}.${subKey}`] = { change: 'Unchanged', file: `${file1Name}, ${file2Name}` };
       }
     });
   });
@@ -118,11 +118,11 @@ app.post('/compare', upload.array('files', 2), async (req, res) => {
     const perm1 = parsePermissions(xml1);
     const perm2 = parsePermissions(xml2);
 
-    const changes = comparePermissions(perm1, perm2);
+    const changes = comparePermissions(perm1, perm2, file1.originalname, file2.originalname);
 
     const workbook = xlsx.utils.book_new();
     const worksheet = xlsx.utils.json_to_sheet(
-      Object.entries(changes).map(([field, change]) => ({ field, change }))
+      Object.entries(changes).map(([field, { change, file }]) => ({ field, change, file }))
     );
     xlsx.utils.book_append_sheet(workbook, worksheet, 'Changes');
     const filePath = path.join(__dirname, 'changes.xlsx');

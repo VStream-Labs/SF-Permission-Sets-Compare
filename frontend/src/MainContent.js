@@ -11,7 +11,7 @@ const MainContent = ({ data, downloadUrl }) => {
       case 'Changed':
         return 'red';
       case 'Created':
-        return 'blue';
+        return 'yellow';
       default:
         return 'black';
     }
@@ -65,6 +65,9 @@ const MainContent = ({ data, downloadUrl }) => {
               <th onClick={() => requestSort('change')}>
                 Modification Status {getSortIcon('change')}
               </th>
+              <th onClick={() => requestSort('file')}>
+                File {getSortIcon('file')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -72,6 +75,7 @@ const MainContent = ({ data, downloadUrl }) => {
               <tr key={index}>
                 <td>{row.field}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
+                <td>{row.file}</td>
               </tr>
             ))}
           </tbody>
