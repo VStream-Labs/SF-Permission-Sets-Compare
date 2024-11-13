@@ -1,93 +1,152 @@
 const express = require('express');
+const cors = require('cors');
 const multer = require('multer');
 const xml2js = require('xml2js');
-const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors');
+const xlsx = require('xlsx');
 
 const app = express();
 app.use(cors());
-
 const upload = multer({ dest: 'uploads/' });
 
 const parsePermissions = (xml) => {
   const permissions = {
-    applicationVisibilities: {},
-    userPermissions: {},
-    objectPermissions: {},
-    fieldPermissions: {},
-    pageAccesses: {},
-    classAccesses: {},
-    tabSettings: {},
-    recordTypeVisibilities: {}
+    applicationVisibilities: [],
+    userPermissions: [],
+    objectPermissions: [],
+    fieldPermissions: [],
+    pageAccesses: [],
+    classAccesses: [],
+    tabSettings: [],
+    recordTypeVisibilities: []
   };
 
-  xml.PermissionSet.applicationVisibilities.forEach((item) => {
-    permissions.applicationVisibilities[item.application[0]] = item.visible[0];
-  });
+  if (xml.PermissionSet.applicationVisibilities) {
+    xml.PermissionSet.applicationVisibilities.forEach((item) => {
+      permissions.applicationVisibilities.push({
+        application: item.application[0],
+        visible: item.visible[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.userPermissions.forEach((item) => {
-    permissions.userPermissions[item.name[0]] = item.enabled[0];
-  });
+  if (xml.PermissionSet.userPermissions) {
+    xml.PermissionSet.userPermissions.forEach((item) => {
+      permissions.userPermissions.push({
+        name: item.name[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.objectPermissions.forEach((item) => {
-    permissions.objectPermissions[item.object[0]] = {
-      allowCreate: item.allowCreate[0],
-      allowDelete: item.allowDelete[0],
-      allowEdit: item.allowEdit[0],
-      allowRead: item.allowRead[0],
-      viewAllRecords: item.viewAllRecords[0],
-      modifyAllRecords: item.modifyAllRecords[0]
-    };
-  });
+  if (xml.PermissionSet.objectPermissions) {
+    xml.PermissionSet.objectPermissions.forEach((item) => {
+      permissions.objectPermissions.push({
+        object: item.object[0],
+        allowCreate: item.allowCreate[0],
+        allowDelete: item.allowDelete[0],
+        allowEdit: item.allowEdit[0],
+        allowRead: item.allowRead[0],
+        viewAllRecords: item.viewAllRecords[0],
+        modifyAllRecords: item.modifyAllRecords[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.fieldPermissions.forEach((item) => {
-    permissions.fieldPermissions[item.field[0]] = {
-      editable: item.editable[0],
-      readable: item.readable[0]
-    };
-  });
+  if (xml.PermissionSet.fieldPermissions) {
+    xml.PermissionSet.fieldPermissions.forEach((item) => {
+      permissions.fieldPermissions.push({
+        field: item.field[0],
+        editable: item.editable[0],
+        readable: item.readable[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.pageAccesses.forEach((item) => {
-    permissions.pageAccesses[item.apexPage[0]] = item.enabled[0];
-  });
+  if (xml.PermissionSet.pageAccesses) {
+    xml.PermissionSet.pageAccesses.forEach((item) => {
+      permissions.pageAccesses.push({
+        apexPage: item.apexPage[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.classAccesses.forEach((item) => {
-    permissions.classAccesses[item.apexClass[0]] = item.enabled[0];
-  });
+  if (xml.PermissionSet.classAccesses) {
+    xml.PermissionSet.classAccesses.forEach((item) => {
+      permissions.classAccesses.push({
+        apexClass: item.apexClass[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.tabSettings.forEach((item) => {
-    permissions.tabSettings[item.tab[0]] = item.visibility[0];
-  });
+  if (xml.PermissionSet.tabSettings) {
+    xml.PermissionSet.tabSettings.forEach((item) => {
+      permissions.tabSettings.push({
+        tab: item.tab[0],
+        visibility: item.visibility[0]
+      });
+    });
+  }
 
-  xml.PermissionSet.recordTypeVisibilities.forEach((item) => {
-    permissions.recordTypeVisibilities[item.recordType[0]] = item.visible[0];
-  });
+  if (xml.PermissionSet.recordTypeVisibilities) {
+    xml.PermissionSet.recordTypeVisibilities.forEach((item) => {
+      permissions.recordTypeVisibilities.push({
+        recordType: item.recordType[0],
+        visible: item.visible[0]
+      });
+    });
+  }
 
+  console.log('Parsed Permissions:', permissions); // Log the parsed permissions
   return permissions;
 };
 
 const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
-  const changes = {};
-  const allKeys = new Set([...Object.keys(perm1), ...Object.keys(perm2)]);
+  const changes = [];
 
-  allKeys.forEach((key) => {
-    const subKeys = new Set([...Object.keys(perm1[key] || {}), ...Object.keys(perm2[key] || {})]);
+  const compare = (key, item1, item2) => {
+    if (JSON.stringify(item1) !== JSON.stringify(item2)) {
+      changes.push({
+        path: key,
+        change: 'Modified',
+        file: `${file1Name}, ${file2Name}`
+      });
+    }
+  };
 
-    subKeys.forEach((subKey) => {
-      if (!perm1[key] || !perm1[key][subKey]) {
-        changes[`${key}.${subKey}`] = { change: 'Created', file: file2Name };
-      } else if (!perm2[key] || !perm2[key][subKey]) {
-        changes[`${key}.${subKey}`] = { change: 'Deleted', file: file1Name };
-      } else if (JSON.stringify(perm1[key][subKey]) !== JSON.stringify(perm2[key][subKey])) {
-        changes[`${key}.${subKey}`] = { change: 'Changed', file: `${file1Name}, ${file2Name}` };
+  Object.keys(perm1).forEach((key) => {
+    const items1 = perm1[key];
+    const items2 = perm2[key];
+
+    items1.forEach((item1) => {
+      const item2 = items2.find((item) => item.field === item1.field || item.object === item1.object || item.tab === item1.tab);
+      if (item2) {
+        compare(`${key}.${item1.field || item1.object || item1.tab}`, item1, item2);
       } else {
-        changes[`${key}.${subKey}`] = { change: 'Unchanged', file: `${file1Name}, ${file2Name}` };
+        changes.push({
+          path: `${key}.${item1.field || item1.object || item1.tab}`,
+          change: 'Deleted',
+          file: file1Name
+        });
+      }
+    });
+
+    items2.forEach((item2) => {
+      const item1 = items1.find((item) => item.field === item2.field || item.object === item2.object || item.tab === item2.tab);
+      if (!item1) {
+        changes.push({
+          path: `${key}.${item2.field || item2.object || item2.tab}`,
+          change: 'Added',
+          file: file2Name
+        });
       }
     });
   });
 
+  console.log('Changes:', changes); // Log the changes
   return changes;
 };
 
@@ -121,9 +180,8 @@ app.post('/compare', upload.array('files', 2), async (req, res) => {
     const changes = comparePermissions(perm1, perm2, file1.originalname, file2.originalname);
 
     const workbook = xlsx.utils.book_new();
-    const worksheet = xlsx.utils.json_to_sheet(
-      Object.entries(changes).map(([field, { change, file }]) => ({ field, change, file }))
-    );
+    const worksheet = xlsx.utils.json_to_sheet(changes);
+    console.log('Worksheet Data:', worksheet); // Log the worksheet data
     xlsx.utils.book_append_sheet(workbook, worksheet, 'Changes');
     const filePath = path.join(__dirname, 'changes.xlsx');
     xlsx.writeFile(workbook, filePath);

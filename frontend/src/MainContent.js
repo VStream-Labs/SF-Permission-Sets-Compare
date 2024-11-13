@@ -1,26 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Table } from 'react-bootstrap';
 import { Treebeard } from 'react-treebeard';
 
-const MainContent = ({ data, downloadUrl }) => {
-  const [sortConfig, setSortConfig] = useState({ key: 'field', direction: 'ascending' });
-  const [treeData, setTreeData] = useState({});
-  const [cursor, setCursor] = useState(false);
+const buildTree = (data) => {
+  const tree = {};
 
-  const getChangeColor = (change) => {
-    switch (change) {
-      case 'Unchanged':
-        return 'green';
-      case 'Changed':
-        return 'red';
-      case 'Created':
-        return 'yellow';
-      default:
-        return 'black';
-    }
+  data.forEach((item) => {
+    const parts = item.field.split('.');
+    let current = tree;
+
+    parts.forEach((part, index) => {
+      if (!current[part]) {
+        current[part] = {
+          name: part,
+          children: {}
+        };
+      }
+
+      if (index === parts.length - 1) {
+        current[part].change = item.change;
+        current[part].file = item.file;
+      }
+
+      current = current[part].children;
+    });
+  });
+
+  const convertToTree = (obj) => {
+    return Object.keys(obj).map((key) => {
+      const item = obj[key];
+      return {
+        name: item.name,
+        change: item.change,
+        file: item.file,
+        children: convertToTree(item.children)
+      };
+    });
   };
 
-  const sortedData = React.useMemo(() => {
+  return convertToTree(tree);
+};
+
+const MainContent = ({ data, downloadUrl }) => {
+  const [sortConfig, setSortConfig] = useState(null);
+
+  const sortedData = useMemo(() => {
     let sortableData = [...data];
     if (sortConfig !== null) {
       sortableData.sort((a, b) => {
@@ -38,49 +62,48 @@ const MainContent = ({ data, downloadUrl }) => {
 
   const requestSort = (key) => {
     let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === 'ascending'
+    ) {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
   };
 
   const getSortIcon = (key) => {
+    if (!sortConfig) {
+      return null;
+    }
     if (sortConfig.key === key) {
       return sortConfig.direction === 'ascending' ? '▲' : '▼';
     }
-    return '↕';
+    return null;
   };
 
+  const treeData = buildTree(data);
+  console.log('Tree Data:', treeData); // Log the tree data
+
   const handleToggle = (node, toggled) => {
-    if (cursor) {
-      cursor.active = false;
-    }
-    node.active = true;
+    node.active = !node.active;
     if (node.children) {
       node.toggled = toggled;
     }
-    setCursor(node);
-    setTreeData(Object.assign({}, treeData));
   };
 
-  const buildTreeData = (changes) => {
-    const tree = {
-      name: 'Changes',
-      toggled: true,
-      children: Object.entries(changes).map(([field, { change, file, exactChange }]) => ({
-        name: field,
-        children: [
-          { name: `Change: ${change}`, children: exactChange ? [{ name: exactChange }] : [] },
-          { name: `File: ${file}` },
-        ],
-      })),
-    };
-    setTreeData(tree);
+  const getChangeColor = (change) => {
+    switch (change) {
+      case 'Added':
+        return 'green';
+      case 'Modified':
+        return 'orange';
+      case 'Deleted':
+        return 'red';
+      default:
+        return 'black';
+    }
   };
-
-  React.useEffect(() => {
-    buildTreeData(data);
-  }, [data]);
 
   return (
     <div className="main-content">
