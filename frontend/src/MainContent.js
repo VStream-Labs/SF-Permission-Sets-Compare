@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Table } from 'react-bootstrap';
+import { Treebeard } from 'react-treebeard';
 
 const MainContent = ({ data, downloadUrl }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'field', direction: 'ascending' });
+  const [treeData, setTreeData] = useState({});
+  const [cursor, setCursor] = useState(false);
 
   const getChangeColor = (change) => {
     switch (change) {
@@ -48,6 +51,37 @@ const MainContent = ({ data, downloadUrl }) => {
     return '↕';
   };
 
+  const handleToggle = (node, toggled) => {
+    if (cursor) {
+      cursor.active = false;
+    }
+    node.active = true;
+    if (node.children) {
+      node.toggled = toggled;
+    }
+    setCursor(node);
+    setTreeData(Object.assign({}, treeData));
+  };
+
+  const buildTreeData = (changes) => {
+    const tree = {
+      name: 'Changes',
+      toggled: true,
+      children: Object.entries(changes).map(([field, { change, file, exactChange }]) => ({
+        name: field,
+        children: [
+          { name: `Change: ${change}`, children: exactChange ? [{ name: exactChange }] : [] },
+          { name: `File: ${file}` },
+        ],
+      })),
+    };
+    setTreeData(tree);
+  };
+
+  React.useEffect(() => {
+    buildTreeData(data);
+  }, [data]);
+
   return (
     <div className="main-content">
       {downloadUrl && (
@@ -68,6 +102,7 @@ const MainContent = ({ data, downloadUrl }) => {
               <th onClick={() => requestSort('file')}>
                 File {getSortIcon('file')}
               </th>
+              <th>Exact Change</th>
             </tr>
           </thead>
           <tbody>
@@ -76,6 +111,12 @@ const MainContent = ({ data, downloadUrl }) => {
                 <td>{row.field}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
                 <td>{row.file}</td>
+                <td>
+                  <Treebeard
+                    data={treeData}
+                    onToggle={handleToggle}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
