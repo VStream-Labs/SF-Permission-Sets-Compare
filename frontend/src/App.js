@@ -22,15 +22,17 @@ const App = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/compare', formData, {
-        responseType: 'blob',
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      setDownloadUrl(url);
+      const response = await axios.post('http://localhost:5000/compare', formData);
+      console.log('Response Data:', response.data); // Log the response data
 
-      // Assuming the server also returns the changes as JSON
-      const changes = await response.data.text();
-      setData(JSON.parse(changes));
+      const changesArray = Object.entries(response.data.changes).map(([field, change]) => ({
+        field,
+        change,
+      }));
+      console.log('Transformed Data:', changesArray); // Log the transformed data
+
+      setDownloadUrl(response.data.downloadUrl);
+      setData(changesArray);
     } catch (error) {
       console.error('Error comparing files:', error);
     }

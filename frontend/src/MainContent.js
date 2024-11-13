@@ -2,6 +2,8 @@ import React from 'react';
 import { Table } from 'react-bootstrap';
 
 const MainContent = ({ data, downloadUrl }) => {
+  console.log('Received Data:', data); // Log the received data
+
   return (
     <div className="main-content">
       {downloadUrl && (
@@ -9,7 +11,7 @@ const MainContent = ({ data, downloadUrl }) => {
           Download Result
         </a>
       )}
-      {data && (
+      {data && data.length > 0 && (
         <Table striped bordered hover>
           <thead>
             <tr>

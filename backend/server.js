@@ -4,10 +4,10 @@ const xml2js = require('xml2js');
 const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 
 const app = express();
-app.use(cors()); // Enable CORS
+app.use(cors());
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -128,11 +128,15 @@ app.post('/compare', upload.array('files', 2), async (req, res) => {
     const filePath = path.join(__dirname, 'changes.xlsx');
     xlsx.writeFile(workbook, filePath);
 
-    res.download(filePath, 'changes.xlsx', (err) => {
-      if (err) console.error(err);
-      fs.unlinkSync(file1.path);
-      fs.unlinkSync(file2.path);
-      fs.unlinkSync(filePath);
+    res.json({ changes, downloadUrl: `http://localhost:5000/download` });
+
+    app.get('/download', (req, res) => {
+      res.download(filePath, 'changes.xlsx', (err) => {
+        if (err) console.error(err);
+        fs.unlinkSync(file1.path);
+        fs.unlinkSync(file2.path);
+        fs.unlinkSync(filePath);
+      });
     });
   } catch (error) {
     console.error('Error processing files:', error);
