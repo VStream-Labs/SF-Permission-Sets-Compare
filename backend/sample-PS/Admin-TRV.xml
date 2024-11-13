@@ -7,6 +7,10 @@
         <application>JobApps__Recruiting</application>
         <visible>true</visible>
     </applicationVisibilities>
+    <applicationVisibilities>
+        <application>JobApps__Recruiting1</application>
+        <visible>true</visible>
+    </applicationVisibilities>
     <userPermissions>
         <enabled>true</enabled>
         <name>ApiEnabled</name>
@@ -17,7 +21,7 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <viewAllRecords>true</viewAllRecords>
-        <modifyAllRecords>true</modifyAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
         <object>Job_Request__c</object>
     </objectPermissions>
     <fieldPermissions>
