@@ -1,8 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Table } from 'react-bootstrap';
 
 const MainContent = ({ data, downloadUrl }) => {
-  console.log('Received Data:', data); // Log the received data
+  const [sortConfig, setSortConfig] = useState({ key: 'field', direction: 'ascending' });
+
+  const getChangeColor = (change) => {
+    switch (change) {
+      case 'Unchanged':
+        return 'green';
+      case 'Changed':
+        return 'red';
+      case 'Created':
+        return 'blue';
+      default:
+        return 'black';
+    }
+  };
+
+  const sortedData = React.useMemo(() => {
+    let sortableData = [...data];
+    if (sortConfig !== null) {
+      sortableData.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableData;
+  }, [data, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'ascending' ? '▲' : '▼';
+    }
+    return '↕';
+  };
 
   return (
     <div className="main-content">
@@ -15,15 +59,19 @@ const MainContent = ({ data, downloadUrl }) => {
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Field</th>
-              <th>Change</th>
+              <th onClick={() => requestSort('field')}>
+                PermissionType {getSortIcon('field')}
+              </th>
+              <th onClick={() => requestSort('change')}>
+                Modification Status {getSortIcon('change')}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {data.map((row, index) => (
+            {sortedData.map((row, index) => (
               <tr key={index}>
                 <td>{row.field}</td>
-                <td>{row.change}</td>
+                <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
               </tr>
             ))}
           </tbody>
