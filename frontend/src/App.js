@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import NavBar from './NavBar';
+import SidePanel from './SidePanel';
+import MainContent from './MainContent';
+import './App.css';
 
 const App = () => {
   const [files, setFiles] = useState([]);
+  const [data, setData] = useState([]);
   const [downloadUrl, setDownloadUrl] = useState('');
 
   const handleFileChange = (e) => {
@@ -21,31 +27,28 @@ const App = () => {
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       setDownloadUrl(url);
+
+      // Assuming the server also returns the changes as JSON
+      const changes = await response.data.text();
+      setData(JSON.parse(changes));
     } catch (error) {
       console.error('Error comparing files:', error);
     }
   };
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = 'changes.xlsx';
-    link.click();
-  };
-
   return (
-    <div>
-      <h1>Compare Permission Sets</h1>
-      <input type="file" multiple onChange={handleFileChange} />
-      <button onClick={handleCompare}>Compare</button>
-      {downloadUrl && (
-        <div>
-          <a href={downloadUrl} download="changes.xlsx">
-            Download Result
-          </a>
-          <button onClick={handleDownload}>Download</button>
+    <div className="App">
+      <NavBar />
+      <div className="container-fluid">
+        <div className="row">
+          <div className="col-md-3">
+            <SidePanel handleFileChange={handleFileChange} handleCompare={handleCompare} />
+          </div>
+          <div className="col-md-9">
+            <MainContent data={data} downloadUrl={downloadUrl} />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
