@@ -8,6 +8,86 @@ const path = require('path');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
+const parsePermissions = (xml) => {
+  const permissions = {
+    applicationVisibilities: {},
+    userPermissions: {},
+    objectPermissions: {},
+    fieldPermissions: {},
+    pageAccesses: {},
+    classAccesses: {},
+    tabSettings: {},
+    recordTypeVisibilities: {}
+  };
+
+  xml.PermissionSet.applicationVisibilities.forEach((item) => {
+    permissions.applicationVisibilities[item.application[0]] = item.visible[0];
+  });
+
+  xml.PermissionSet.userPermissions.forEach((item) => {
+    permissions.userPermissions[item.name[0]] = item.enabled[0];
+  });
+
+  xml.PermissionSet.objectPermissions.forEach((item) => {
+    permissions.objectPermissions[item.object[0]] = {
+      allowCreate: item.allowCreate[0],
+      allowDelete: item.allowDelete[0],
+      allowEdit: item.allowEdit[0],
+      allowRead: item.allowRead[0],
+      viewAllRecords: item.viewAllRecords[0],
+      modifyAllRecords: item.modifyAllRecords[0]
+    };
+  });
+
+  xml.PermissionSet.fieldPermissions.forEach((item) => {
+    permissions.fieldPermissions[item.field[0]] = {
+      editable: item.editable[0],
+      readable: item.readable[0]
+    };
+  });
+
+  xml.PermissionSet.pageAccesses.forEach((item) => {
+    permissions.pageAccesses[item.apexPage[0]] = item.enabled[0];
+  });
+
+  xml.PermissionSet.classAccesses.forEach((item) => {
+    permissions.classAccesses[item.apexClass[0]] = item.enabled[0];
+  });
+
+  xml.PermissionSet.tabSettings.forEach((item) => {
+    permissions.tabSettings[item.tab[0]] = item.visibility[0];
+  });
+
+  xml.PermissionSet.recordTypeVisibilities.forEach((item) => {
+    permissions.recordTypeVisibilities[item.recordType[0]] = item.visible[0];
+  });
+
+  return permissions;
+};
+
+const comparePermissions = (perm1, perm2) => {
+  const changes = {};
+  const allKeys = new Set([...Object.keys(perm1), ...Object.keys(perm2)]);
+
+  allKeys.forEach((key) => {
+    const subKeys = new Set([...Object.keys(perm1[key] || {}), ...Object.keys(perm2[key] || {})]);
+
+    subKeys.forEach((subKey) => {
+      if (!perm1[key] || !perm1[key][subKey]) {
+        changes[`${key}.${subKey}`] = 'Created';
+      } else if (!perm2[key] || !perm2[key][subKey]) {
+        changes[`${key}.${subKey}`] = 'Deleted';
+      } else if (JSON.stringify(perm1[key][subKey]) !== JSON.stringify(perm2[key][subKey])) {
+        changes[`${key}.${subKey}`] = 'Changed';
+      } else {
+        changes[`${key}.${subKey}`] = 'Unchanged';
+      }
+    });
+  });
+
+  return changes;
+};
+
 app.post('/compare', upload.array('files', 2), async (req, res) => {
   const files = req.files;
   if (files.length !== 2) {
@@ -28,25 +108,11 @@ app.post('/compare', upload.array('files', 2), async (req, res) => {
     });
   };
 
-  const perm1 = await parseXML(file1.path);
-  const perm2 = await parseXML(file2.path);
+  const xml1 = await parseXML(file1.path);
+  const xml2 = await parseXML(file2.path);
 
-  const comparePermissions = (perm1, perm2) => {
-    const changes = {};
-    const allFields = new Set([...Object.keys(perm1), ...Object.keys(perm2)]);
-    allFields.forEach((field) => {
-      if (!perm1[field]) {
-        changes[field] = 'Created';
-      } else if (!perm2[field]) {
-        changes[field] = 'Deleted';
-      } else if (JSON.stringify(perm1[field]) !== JSON.stringify(perm2[field])) {
-        changes[field] = 'Changed';
-      } else {
-        changes[field] = 'Unchanged';
-      }
-    });
-    return changes;
-  };
+  const perm1 = parsePermissions(xml1);
+  const perm2 = parsePermissions(xml2);
 
   const changes = comparePermissions(perm1, perm2);
 
