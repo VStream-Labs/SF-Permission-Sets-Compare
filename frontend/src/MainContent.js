@@ -1,45 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Table } from 'react-bootstrap';
-import { Treebeard } from 'react-treebeard';
-
-const buildTree = (data) => {
-  const tree = {};
-
-  data.forEach((item) => {
-    const parts = item.field.split('.');
-    let current = tree;
-
-    parts.forEach((part, index) => {
-      if (!current[part]) {
-        current[part] = {
-          name: part,
-          children: {}
-        };
-      }
-
-      if (index === parts.length - 1) {
-        current[part].change = item.change;
-        current[part].file = item.file;
-      }
-
-      current = current[part].children;
-    });
-  });
-
-  const convertToTree = (obj) => {
-    return Object.keys(obj).map((key) => {
-      const item = obj[key];
-      return {
-        name: item.name,
-        change: item.change,
-        file: item.file,
-        children: convertToTree(item.children)
-      };
-    });
-  };
-
-  return convertToTree(tree);
-};
 
 const MainContent = ({ data, downloadUrl }) => {
   const [sortConfig, setSortConfig] = useState(null);
@@ -82,16 +42,6 @@ const MainContent = ({ data, downloadUrl }) => {
     return null;
   };
 
-  const treeData = buildTree(data);
-  console.log('Tree Data:', treeData); // Log the tree data
-
-  const handleToggle = (node, toggled) => {
-    node.active = !node.active;
-    if (node.children) {
-      node.toggled = toggled;
-    }
-  };
-
   const getChangeColor = (change) => {
     switch (change) {
       case 'Added':
@@ -116,8 +66,8 @@ const MainContent = ({ data, downloadUrl }) => {
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th onClick={() => requestSort('field')}>
-                PermissionType {getSortIcon('field')}
+              <th onClick={() => requestSort('path')}>
+                PermissionType {getSortIcon('path')}
               </th>
               <th onClick={() => requestSort('change')}>
                 Modification Status {getSortIcon('change')}
@@ -131,15 +81,10 @@ const MainContent = ({ data, downloadUrl }) => {
           <tbody>
             {sortedData.map((row, index) => (
               <tr key={index}>
-                <td>{row.field}</td>
+                <td>{row.path}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
                 <td>{row.file}</td>
-                <td>
-                  <Treebeard
-                    data={treeData}
-                    onToggle={handleToggle}
-                  />
-                </td>
+                <td></td> {/* Empty Exact Change column */}
               </tr>
             ))}
           </tbody>

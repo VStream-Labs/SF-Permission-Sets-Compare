@@ -184,9 +184,7 @@ app.post('/compare', upload.fields([{ name: 'filesSet1' }, { name: 'filesSet2' }
     console.log('Changes:', changes); // Log the changes
 
     const workbook = xlsx.utils.book_new();
-    const worksheet = xlsx.utils.json_to_sheet(
-      Object.entries(changes).map(([field, { change, file }]) => ({ field, change, file }))
-    );
+    const worksheet = xlsx.utils.json_to_sheet(changes);
     console.log('Worksheet Data:', worksheet); // Log the worksheet data
     xlsx.utils.book_append_sheet(workbook, worksheet, 'Changes');
     const filePath = path.join(__dirname, 'changes.xlsx');
