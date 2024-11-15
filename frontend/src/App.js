@@ -7,28 +7,36 @@ import MainContent from './MainContent';
 import './App.css';
 
 const App = () => {
-  const [files, setFiles] = useState([]);
+  const [filesSet1, setFilesSet1] = useState([]);
+  const [filesSet2, setFilesSet2] = useState([]);
   const [data, setData] = useState([]);
   const [downloadUrl, setDownloadUrl] = useState('');
 
-  const handleFileChange = (e) => {
-    setFiles(e.target.files);
+  const handleFileChange = (e, set) => {
+    if (set === 'set1') {
+      setFilesSet1(e.target.files);
+    } else if (set === 'set2') {
+      setFilesSet2(e.target.files);
+    }
   };
 
   const handleCompare = async () => {
     const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
+    for (let i = 0; i < filesSet1.length; i++) {
+      formData.append('filesSet1', filesSet1[i]);
+    }
+    for (let i = 0; i < filesSet2.length; i++) {
+      formData.append('filesSet2', filesSet2[i]);
     }
 
     try {
       const response = await axios.post('http://localhost:5000/compare', formData);
       console.log('Response Data:', response.data); // Log the response data
 
-      const changesArray = response.data.changes.map((change) => ({
-        path: change.path,
-        change: change.change,
-        file: change.file,
+      const changesArray = Object.entries(response.data.changes).map(([field, { change, file }]) => ({
+        field,
+        change,
+        file,
       }));
       console.log('Transformed Data:', changesArray); // Log the transformed data
 

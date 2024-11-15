@@ -105,15 +105,14 @@ const parsePermissions = (xml) => {
 };
 
 const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
-  const changes = [];
+  const changes = {};
 
   const compare = (key, item1, item2) => {
     if (JSON.stringify(item1) !== JSON.stringify(item2)) {
-      changes.push({
-        path: key,
+      changes[key] = {
         change: 'Modified',
         file: `${file1Name}, ${file2Name}`
-      });
+      };
     }
   };
 
@@ -121,28 +120,9 @@ const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
     const items1 = perm1[key];
     const items2 = perm2[key];
 
-    items1.forEach((item1) => {
-      const item2 = items2.find((item) => item.field === item1.field || item.object === item1.object || item.tab === item1.tab);
-      if (item2) {
-        compare(`${key}.${item1.field || item1.object || item1.tab}`, item1, item2);
-      } else {
-        changes.push({
-          path: `${key}.${item1.field || item1.object || item1.tab}`,
-          change: 'Deleted',
-          file: file1Name
-        });
-      }
-    });
-
-    items2.forEach((item2) => {
-      const item1 = items1.find((item) => item.field === item2.field || item.object === item2.object || item.tab === item2.tab);
-      if (!item1) {
-        changes.push({
-          path: `${key}.${item2.field || item2.object || item2.tab}`,
-          change: 'Added',
-          file: file2Name
-        });
-      }
+    items1.forEach((item1, index) => {
+      const item2 = items2[index];
+      compare(`${key}.${item1.name}`, item1, item2);
     });
   });
 
@@ -150,13 +130,12 @@ const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
   return changes;
 };
 
-app.post('/compare', upload.array('files', 2), async (req, res) => {
-  const files = req.files;
-  if (files.length !== 2) {
-    return res.status(400).send('Two files are required.');
+app.post('/compare', upload.fields([{ name: 'filesSet1' }, { name: 'filesSet2' }]), async (req, res) => {
+  const filesSet1 = req.files.filesSet1;
+  const filesSet2 = req.files.filesSet2;
+  if (!filesSet1 || !filesSet2) {
+    return res.status(400).send('Two sets of files are required.');
   }
-
-  const [file1, file2] = files;
 
   const parseXML = (filePath) => {
     return new Promise((resolve, reject) => {
@@ -171,16 +150,23 @@ app.post('/compare', upload.array('files', 2), async (req, res) => {
   };
 
   try {
-    const xml1 = await parseXML(file1.path);
-    const xml2 = await parseXML(file2.path);
+    const xml1 = await parseXML(filesSet1[0].path);
+    const xml2 = await parseXML(filesSet2[0].path);
 
     const perm1 = parsePermissions(xml1);
     const perm2 = parsePermissions(xml2);
 
-    const changes = comparePermissions(perm1, perm2, file1.originalname, file2.originalname);
+    console.log('Permissions Set 1:', perm1); // Log permissions set 1
+    console.log('Permissions Set 2:', perm2); // Log permissions set 2
+
+    const changes = comparePermissions(perm1, perm2, filesSet1[0].originalname, filesSet2[0].originalname);
+
+    console.log('Changes:', changes); // Log the changes
 
     const workbook = xlsx.utils.book_new();
-    const worksheet = xlsx.utils.json_to_sheet(changes);
+    const worksheet = xlsx.utils.json_to_sheet(
+      Object.entries(changes).map(([field, { change, file }]) => ({ field, change, file }))
+    );
     console.log('Worksheet Data:', worksheet); // Log the worksheet data
     xlsx.utils.book_append_sheet(workbook, worksheet, 'Changes');
     const filePath = path.join(__dirname, 'changes.xlsx');
@@ -191,8 +177,8 @@ app.post('/compare', upload.array('files', 2), async (req, res) => {
     app.get('/download', (req, res) => {
       res.download(filePath, 'changes.xlsx', (err) => {
         if (err) console.error(err);
-        fs.unlinkSync(file1.path);
-        fs.unlinkSync(file2.path);
+        fs.unlinkSync(filesSet1[0].path);
+        fs.unlinkSync(filesSet2[0].path);
         fs.unlinkSync(filePath);
       });
     });

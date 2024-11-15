@@ -6,26 +6,24 @@ const buildTree = (data) => {
   const tree = {};
 
   data.forEach((item) => {
-    if (item.path) {
-      const parts = item.path.split('.');
-      let current = tree;
+    const parts = item.field.split('.');
+    let current = tree;
 
-      parts.forEach((part, index) => {
-        if (!current[part]) {
-          current[part] = {
-            name: part,
-            children: {}
-          };
-        }
+    parts.forEach((part, index) => {
+      if (!current[part]) {
+        current[part] = {
+          name: part,
+          children: {}
+        };
+      }
 
-        if (index === parts.length - 1) {
-          current[part].change = item.change;
-          current[part].file = item.file;
-        }
+      if (index === parts.length - 1) {
+        current[part].change = item.change;
+        current[part].file = item.file;
+      }
 
-        current = current[part].children;
-      });
-    }
+      current = current[part].children;
+    });
   });
 
   const convertToTree = (obj) => {
@@ -115,38 +113,37 @@ const MainContent = ({ data, downloadUrl }) => {
         </a>
       )}
       {data && data.length > 0 && (
-        <>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th onClick={() => requestSort('path')}>
-                  PermissionType {getSortIcon('path')}
-                </th>
-                <th onClick={() => requestSort('change')}>
-                  Modification Status {getSortIcon('change')}
-                </th>
-                <th onClick={() => requestSort('file')}>
-                  File {getSortIcon('file')}
-                </th>
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th onClick={() => requestSort('field')}>
+                PermissionType {getSortIcon('field')}
+              </th>
+              <th onClick={() => requestSort('change')}>
+                Modification Status {getSortIcon('change')}
+              </th>
+              <th onClick={() => requestSort('file')}>
+                File {getSortIcon('file')}
+              </th>
+              <th>Exact Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedData.map((row, index) => (
+              <tr key={index}>
+                <td>{row.field}</td>
+                <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
+                <td>{row.file}</td>
+                <td>
+                  <Treebeard
+                    data={treeData}
+                    onToggle={handleToggle}
+                  />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {sortedData.map((row, index) => (
-                <tr key={index}>
-                  <td>{row.path}</td>
-                  <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
-                  <td>{row.file}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          <div className="tree-container">
-            <Treebeard
-              data={treeData}
-              onToggle={handleToggle}
-            />
-          </div>
-        </>
+            ))}
+          </tbody>
+        </Table>
       )}
     </div>
   );
