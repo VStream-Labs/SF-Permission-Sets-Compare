@@ -105,14 +105,15 @@ const parsePermissions = (xml) => {
 };
 
 const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
-  const changes = {};
+  const changes = [];
 
   const compare = (key, item1, item2) => {
     if (JSON.stringify(item1) !== JSON.stringify(item2)) {
-      changes[key] = {
+      changes.push({
+        path: key,
         change: 'Modified',
         file: `${file1Name}, ${file2Name}`
-      };
+      });
     }
   };
 
@@ -120,9 +121,28 @@ const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
     const items1 = perm1[key];
     const items2 = perm2[key];
 
-    items1.forEach((item1, index) => {
-      const item2 = items2[index];
-      compare(`${key}.${item1.name}`, item1, item2);
+    items1.forEach((item1) => {
+      const item2 = items2.find((item) => item.field === item1.field || item.object === item1.object || item.tab === item1.tab);
+      if (item2) {
+        compare(`${key}.${item1.field || item1.object || item1.tab}`, item1, item2);
+      } else {
+        changes.push({
+          path: `${key}.${item1.field || item1.object || item1.tab}`,
+          change: 'Deleted',
+          file: file1Name
+        });
+      }
+    });
+
+    items2.forEach((item2) => {
+      const item1 = items1.find((item) => item.field === item2.field || item.object === item2.object || item.tab === item2.tab);
+      if (!item1) {
+        changes.push({
+          path: `${key}.${item2.field || item2.object || item2.tab}`,
+          change: 'Added',
+          file: file2Name
+        });
+      }
     });
   });
 
