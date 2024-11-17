@@ -112,3 +112,22 @@
 .navbar {
   height: 60px; /* Set a fixed height for the navbar */
 }
+
+.animated-icon {
+  color: white;
+  font-size: 24px;
+  animation: rocket-animation 1s infinite alternate;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@keyframes rocket-animation {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}

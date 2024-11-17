@@ -103,7 +103,7 @@ const MainContent = ({ data, downloadUrl }) => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["PermissionType", "Path", "Modification Status", "TRV Value", "PassPort Value"];
+    const tableColumn = ["PermissionType", "Metadata", "Modification Status", "TRV Value", "PassPort Value"];
     const tableRows = [];
 
     sortedData.forEach(row => {
@@ -154,7 +154,7 @@ const MainContent = ({ data, downloadUrl }) => {
                 PermissionType {getSortIcon('permissionType')}
               </th>
               <th onClick={() => requestSort('path')}>
-                Path {getSortIcon('path')}
+                Metadata {getSortIcon('path')}
               </th>
               <th onClick={() => requestSort('change')}>
                 Modification Status {getSortIcon('change')}

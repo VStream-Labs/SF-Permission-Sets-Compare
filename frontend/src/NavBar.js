@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navbar, Nav } from 'react-bootstrap';
-import { FaBars } from 'react-icons/fa';
+import { FaBars, FaRocket } from 'react-icons/fa';
 
 const NavBar = ({ toggleSidePanel, sidePanelVisible }) => {
   return (
@@ -14,7 +14,7 @@ const NavBar = ({ toggleSidePanel, sidePanelVisible }) => {
         Permission Sets Compare: Utility
       </Navbar.Brand>
       <Nav className="ml-auto">
-        {/* Add other Nav items here if needed */}
+        <FaRocket className="animated-icon" />
       </Nav>
     </Navbar>
   );
