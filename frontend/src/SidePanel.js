@@ -1,9 +1,13 @@
 import React from 'react';
 import { Form, Button } from 'react-bootstrap';
+import { FaTimes } from 'react-icons/fa';
 
-const SidePanel = ({ handleFileChange, handleCompare }) => {
+const SidePanel = ({ handleFileChange, handleCompare, toggleSidePanel }) => {
   return (
     <div className="side-panel">
+      <div className="close-icon" onClick={toggleSidePanel}>
+        <FaTimes />
+      </div>
       <Form>
         <Form.Group>
           <Form.Label>Upload Permission Set Files (Set 1)</Form.Label>

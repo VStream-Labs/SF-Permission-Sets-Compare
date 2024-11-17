@@ -41,8 +41,74 @@
   padding: 20px;
   background-color: #f8f9fa;
   height: 100vh;
+  position: relative;
 }
 
 .main-content {
   padding: 20px;
+}
+
+.collapsed {
+  display: none;
+}
+
+.collapse-icon {
+  position: absolute;
+  top: 20px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 28px; /* Increase the size */
+  z-index: 1000;
+  background-color: #f8f9fa;
+  padding: 5px;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.collapse-icon-inline {
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 16px; /* Increase the size */
+  background-color: #f8f9fa;
+  padding: 4px; /* Increase the padding */
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 18px; /* Smaller size */
+  color: #007bff; /* Match the compare button color */
+  z-index: 1000;
+  background-color: #f8f9fa;
+  padding: 5px;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.5rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hamburger-icon {
+  color: white;
+  height: 40px; /* Increase the height */
+  width: 40px; /* Increase the width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar {
+  height: 60px; /* Set a fixed height for the navbar */
 }

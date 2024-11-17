@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import NavBar from './NavBar';
 import SidePanel from './SidePanel';
 import MainContent from './MainContent';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import './App.css';
 
 const App = () => {
@@ -11,6 +12,7 @@ const App = () => {
   const [filesSet2, setFilesSet2] = useState([]);
   const [data, setData] = useState([]);
   const [downloadUrl, setDownloadUrl] = useState('');
+  const [sidePanelVisible, setSidePanelVisible] = useState(false); // Side panel closed by default
 
   const handleFileChange = (e, set) => {
     if (set === 'set1') {
@@ -49,15 +51,25 @@ const App = () => {
     }
   };
 
+  const toggleSidePanel = () => {
+    setSidePanelVisible(!sidePanelVisible);
+  };
+
   return (
     <div className="App">
-      <NavBar />
+      <NavBar toggleSidePanel={toggleSidePanel} sidePanelVisible={sidePanelVisible} />
       <div className="container-fluid">
         <div className="row">
-          <div className="col-md-3">
-            <SidePanel handleFileChange={handleFileChange} handleCompare={handleCompare} />
-          </div>
-          <div className="col-md-9">
+          {sidePanelVisible && (
+            <div className="col-md-3">
+              <SidePanel
+                handleFileChange={handleFileChange}
+                handleCompare={handleCompare}
+                toggleSidePanel={toggleSidePanel}
+              />
+            </div>
+          )}
+          <div className={`col-md-${sidePanelVisible ? '9' : '12'}`}>
             <MainContent data={data} downloadUrl={downloadUrl} />
           </div>
         </div>
