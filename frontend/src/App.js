@@ -34,6 +34,7 @@ const App = () => {
       console.log('Response Data:', response.data); // Log the response data
 
       const changesArray = response.data.changes.map((change) => ({
+        permissionType: change.permissionType || 'N/A', // Ensure permissionType is set
         path: change.key || 'N/A', // Ensure path is set
         change: change.type || 'N/A', // Ensure change is set
         file: change.file,

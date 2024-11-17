@@ -66,8 +66,11 @@ const MainContent = ({ data, downloadUrl }) => {
         <Table striped bordered hover>
           <thead>
             <tr>
+              <th onClick={() => requestSort('permissionType')}>
+                PermissionType {getSortIcon('permissionType')}
+              </th>
               <th onClick={() => requestSort('path')}>
-                PermissionType {getSortIcon('path')}
+                Path {getSortIcon('path')}
               </th>
               <th onClick={() => requestSort('change')}>
                 Modification Status {getSortIcon('change')}
@@ -81,6 +84,7 @@ const MainContent = ({ data, downloadUrl }) => {
           <tbody>
             {sortedData.map((row, index) => (
               <tr key={index}>
+                <td>{row.permissionType}</td>
                 <td>{row.path}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
                 <td>{row.file}</td>

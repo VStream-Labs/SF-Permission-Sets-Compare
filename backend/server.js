@@ -107,33 +107,33 @@ const parsePermissions = (xml) => {
 const comparePermissions = (perm1, perm2, fileName1, fileName2) => {
   const changes = [];
 
-  const compareArrays = (arr1, arr2, key) => {
+  const compareArrays = (arr1, arr2, key, permissionType) => {
     const map1 = new Map(arr1.map(item => [item[key], item]));
     const map2 = new Map(arr2.map(item => [item[key], item]));
 
     map1.forEach((value, key) => {
       if (!map2.has(key)) {
-        changes.push({ file: fileName1, type: 'Removed', key, value });
+        changes.push({ file: fileName1, type: 'Removed', key, value, permissionType });
       } else if (JSON.stringify(value) !== JSON.stringify(map2.get(key))) {
-        changes.push({ file: fileName1, type: 'Modified', key, oldValue: value, newValue: map2.get(key) });
+        changes.push({ file: fileName1, type: 'Modified', key, oldValue: value, newValue: map2.get(key), permissionType });
       }
     });
 
     map2.forEach((value, key) => {
       if (!map1.has(key)) {
-        changes.push({ file: fileName2, type: 'Added', key, value });
+        changes.push({ file: fileName2, type: 'Added', key, value, permissionType });
       }
     });
   };
 
-  compareArrays(perm1.applicationVisibilities, perm2.applicationVisibilities, 'application');
-  compareArrays(perm1.userPermissions, perm2.userPermissions, 'name');
-  compareArrays(perm1.objectPermissions, perm2.objectPermissions, 'object');
-  compareArrays(perm1.fieldPermissions, perm2.fieldPermissions, 'field');
-  compareArrays(perm1.pageAccesses, perm2.pageAccesses, 'apexPage');
-  compareArrays(perm1.classAccesses, perm2.classAccesses, 'apexClass');
-  compareArrays(perm1.tabSettings, perm2.tabSettings, 'tab');
-  compareArrays(perm1.recordTypeVisibilities, perm2.recordTypeVisibilities, 'recordType');
+  compareArrays(perm1.applicationVisibilities, perm2.applicationVisibilities, 'application', 'ApplicationVisibility');
+  compareArrays(perm1.userPermissions, perm2.userPermissions, 'name', 'UserPermission');
+  compareArrays(perm1.objectPermissions, perm2.objectPermissions, 'object', 'ObjectPermission');
+  compareArrays(perm1.fieldPermissions, perm2.fieldPermissions, 'field', 'FieldPermission');
+  compareArrays(perm1.pageAccesses, perm2.pageAccesses, 'apexPage', 'PageAccess');
+  compareArrays(perm1.classAccesses, perm2.classAccesses, 'apexClass', 'ClassAccess');
+  compareArrays(perm1.tabSettings, perm2.tabSettings, 'tab', 'TabSetting');
+  compareArrays(perm1.recordTypeVisibilities, perm2.recordTypeVisibilities, 'recordType', 'RecordTypeVisibility');
 
   return changes;
 };
