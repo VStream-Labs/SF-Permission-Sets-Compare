@@ -1,47 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Table } from 'react-bootstrap';
-import { Treebeard } from 'react-treebeard';
-
-const buildTree = (data) => {
-  const tree = {};
-
-  data.forEach((item) => {
-    if (item.path) {
-      const parts = item.path.split('.');
-      let current = tree;
-
-      parts.forEach((part, index) => {
-        if (!current[part]) {
-          current[part] = {
-            name: part,
-            children: {}
-          };
-        }
-
-        if (index === parts.length - 1) {
-          current[part].change = item.change;
-          current[part].file = item.file;
-        }
-
-        current = current[part].children;
-      });
-    }
-  });
-
-  const convertToTree = (obj) => {
-    return Object.keys(obj).map((key) => {
-      const item = obj[key];
-      return {
-        name: item.name,
-        change: item.change,
-        file: item.file,
-        children: convertToTree(item.children)
-      };
-    });
-  };
-
-  return convertToTree(tree);
-};
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import { diffWords } from 'diff';
 
 const MainContent = ({ data, downloadUrl }) => {
   const [sortConfig, setSortConfig] = useState(null);
@@ -84,16 +46,6 @@ const MainContent = ({ data, downloadUrl }) => {
     return null;
   };
 
-  const treeData = buildTree(data);
-  console.log('Tree Data:', treeData); // Log the tree data
-
-  const handleToggle = (node, toggled) => {
-    node.active = !node.active;
-    if (node.children) {
-      node.toggled = toggled;
-    }
-  };
-
   const getChangeColor = (change) => {
     switch (change) {
       case 'Added':
@@ -107,6 +59,83 @@ const MainContent = ({ data, downloadUrl }) => {
     }
   };
 
+  const renderExactChange = (exactChange) => {
+    if (typeof exactChange === 'object' && exactChange !== null) {
+      return (
+        <table>
+          <tbody>
+            {Object.entries(exactChange).map(([key, value]) => (
+              <tr key={key}>
+                <td><strong>{key}</strong></td>
+                <td>{value.toString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
+    return exactChange ? JSON.stringify(exactChange) : 'N/A';
+  };
+
+  const renderValueAsTable = (value, compareValue, highlightColor = 'yellow') => {
+    if (typeof value === 'object' && value !== null) {
+      return (
+        <table>
+          <tbody>
+            {Object.entries(value).map(([key, val]) => {
+              const compareVal = compareValue ? compareValue[key] : null;
+              const isDifferent = compareVal && val.toString() !== compareVal.toString();
+              return (
+                <tr key={key}>
+                  <td><strong>{key}</strong></td>
+                  <td style={{ backgroundColor: isDifferent ? highlightColor : 'transparent' }}>
+                    {val.toString()}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      );
+    }
+    return value ? JSON.stringify(value) : 'N/A';
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = ["PermissionType", "Metadata", "Modification Status", "TRV Value", "PassPort Value"];
+    const tableRows = [];
+
+    sortedData.forEach(row => {
+      const rowData = [
+        row.permissionType,
+        row.path,
+        row.change,
+        JSON.stringify(row.trvValue),
+        JSON.stringify(row.passPortValue)
+      ];
+      tableRows.push(rowData);
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      styles: { fontSize: 7, cellPadding: 1 },
+      headStyles: { fillColor: [22, 160, 133] },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 35 }
+      },
+      margin: { top: 20, left: 5, right: 5 },
+      theme: 'grid'
+    });
+
+    doc.save('table.pdf');
+  };
+
   return (
     <div className="main-content">
       {downloadUrl && (
@@ -114,39 +143,38 @@ const MainContent = ({ data, downloadUrl }) => {
           Download Result
         </a>
       )}
+      <button onClick={exportToPDF} className="btn btn-primary mb-3">
+        Export to PDF
+      </button>
       {data && data.length > 0 && (
-        <>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th onClick={() => requestSort('path')}>
-                  PermissionType {getSortIcon('path')}
-                </th>
-                <th onClick={() => requestSort('change')}>
-                  Modification Status {getSortIcon('change')}
-                </th>
-                <th onClick={() => requestSort('file')}>
-                  File {getSortIcon('file')}
-                </th>
+        <Table striped bordered hover id="data-table">
+          <thead>
+            <tr>
+              <th onClick={() => requestSort('permissionType')}>
+                PermissionType {getSortIcon('permissionType')}
+              </th>
+              <th onClick={() => requestSort('path')}>
+                Metadata {getSortIcon('path')}
+              </th>
+              <th onClick={() => requestSort('change')}>
+                Modification Status {getSortIcon('change')}
+              </th>
+              <th>TRV Value</th>
+              <th>PassPort Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedData.map((row, index) => (
+              <tr key={index}>
+                <td>{row.permissionType}</td>
+                <td>{row.path}</td>
+                <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
+                <td>{renderValueAsTable(row.trvValue, row.passPortValue)}</td>
+                <td>{renderValueAsTable(row.passPortValue, row.trvValue, 'green')}</td>
               </tr>
-            </thead>
-            <tbody>
-              {sortedData.map((row, index) => (
-                <tr key={index}>
-                  <td>{row.path}</td>
-                  <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
-                  <td>{row.file}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          <div className="tree-container">
-            <Treebeard
-              data={treeData}
-              onToggle={handleToggle}
-            />
-          </div>
-        </>
+            ))}
+          </tbody>
+        </Table>
       )}
     </div>
   );
