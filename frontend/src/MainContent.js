@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Table } from 'react-bootstrap';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 const MainContent = ({ data, downloadUrl }) => {
   const [sortConfig, setSortConfig] = useState(null);
@@ -95,7 +96,29 @@ const MainContent = ({ data, downloadUrl }) => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    doc.autoTable({ html: '#data-table' });
+    const tableColumn = ["PermissionType", "Path", "Modification Status", "TRV Value", "PassPort Value"];
+    const tableRows = [];
+
+    sortedData.forEach(row => {
+      const rowData = [
+        row.permissionType,
+        row.path,
+        row.change,
+        JSON.stringify(row.trvValue),
+        JSON.stringify(row.passPortValue)
+      ];
+      tableRows.push(rowData);
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [22, 160, 133] },
+      startY: 20,
+      theme: 'grid'
+    });
+
     doc.save('table.pdf');
   };
 
