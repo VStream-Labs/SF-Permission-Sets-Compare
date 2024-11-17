@@ -3,6 +3,7 @@ import { Table } from 'react-bootstrap';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import { diffWords } from 'diff';
 
 const MainContent = ({ data, downloadUrl }) => {
   const [sortConfig, setSortConfig] = useState(null);
@@ -76,17 +77,23 @@ const MainContent = ({ data, downloadUrl }) => {
     return exactChange ? JSON.stringify(exactChange) : 'N/A';
   };
 
-  const renderValueAsTable = (value) => {
+  const renderValueAsTable = (value, compareValue, highlightColor = 'yellow') => {
     if (typeof value === 'object' && value !== null) {
       return (
         <table>
           <tbody>
-            {Object.entries(value).map(([key, val]) => (
-              <tr key={key}>
-                <td><strong>{key}</strong></td>
-                <td>{val.toString()}</td>
-              </tr>
-            ))}
+            {Object.entries(value).map(([key, val]) => {
+              const compareVal = compareValue ? compareValue[key] : null;
+              const isDifferent = compareVal && val.toString() !== compareVal.toString();
+              return (
+                <tr key={key}>
+                  <td><strong>{key}</strong></td>
+                  <td style={{ backgroundColor: isDifferent ? highlightColor : 'transparent' }}>
+                    {val.toString()}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       );
@@ -162,8 +169,8 @@ const MainContent = ({ data, downloadUrl }) => {
                 <td>{row.permissionType}</td>
                 <td>{row.path}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
-                <td>{renderValueAsTable(row.trvValue)}</td>
-                <td>{renderValueAsTable(row.passPortValue)}</td>
+                <td>{renderValueAsTable(row.trvValue, row.passPortValue)}</td>
+                <td>{renderValueAsTable(row.passPortValue, row.trvValue, 'green')}</td>
               </tr>
             ))}
           </tbody>
