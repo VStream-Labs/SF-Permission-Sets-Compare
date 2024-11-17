@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Table } from 'react-bootstrap';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const MainContent = ({ data, downloadUrl }) => {
   const [sortConfig, setSortConfig] = useState(null);
@@ -91,6 +93,12 @@ const MainContent = ({ data, downloadUrl }) => {
     return value ? JSON.stringify(value) : 'N/A';
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.autoTable({ html: '#data-table' });
+    doc.save('table.pdf');
+  };
+
   return (
     <div className="main-content">
       {downloadUrl && (
@@ -98,8 +106,11 @@ const MainContent = ({ data, downloadUrl }) => {
           Download Result
         </a>
       )}
+      <button onClick={exportToPDF} className="btn btn-primary mb-3">
+        Export to PDF
+      </button>
       {data && data.length > 0 && (
-        <Table striped bordered hover>
+        <Table striped bordered hover id="data-table">
           <thead>
             <tr>
               <th onClick={() => requestSort('permissionType')}>
