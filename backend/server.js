@@ -100,53 +100,41 @@ const parsePermissions = (xml) => {
     });
   }
 
-  console.log('Parsed Permissions:', permissions); // Log the parsed permissions
+  console.log('Parsed Permissions:', JSON.stringify(permissions, null, 2)); // Log the parsed permissions
   return permissions;
 };
 
-const comparePermissions = (perm1, perm2, file1Name, file2Name) => {
+const comparePermissions = (perm1, perm2, fileName1, fileName2) => {
   const changes = [];
 
-  const compare = (key, item1, item2) => {
-    if (JSON.stringify(item1) !== JSON.stringify(item2)) {
-      changes.push({
-        path: key,
-        change: 'Modified',
-        file: `${file1Name}, ${file2Name}`
-      });
-    }
+  const compareArrays = (arr1, arr2, key) => {
+    const map1 = new Map(arr1.map(item => [item[key], item]));
+    const map2 = new Map(arr2.map(item => [item[key], item]));
+
+    map1.forEach((value, key) => {
+      if (!map2.has(key)) {
+        changes.push({ file: fileName1, type: 'Removed', key, value });
+      } else if (JSON.stringify(value) !== JSON.stringify(map2.get(key))) {
+        changes.push({ file: fileName1, type: 'Modified', key, oldValue: value, newValue: map2.get(key) });
+      }
+    });
+
+    map2.forEach((value, key) => {
+      if (!map1.has(key)) {
+        changes.push({ file: fileName2, type: 'Added', key, value });
+      }
+    });
   };
 
-  Object.keys(perm1).forEach((key) => {
-    const items1 = perm1[key];
-    const items2 = perm2[key];
+  compareArrays(perm1.applicationVisibilities, perm2.applicationVisibilities, 'application');
+  compareArrays(perm1.userPermissions, perm2.userPermissions, 'name');
+  compareArrays(perm1.objectPermissions, perm2.objectPermissions, 'object');
+  compareArrays(perm1.fieldPermissions, perm2.fieldPermissions, 'field');
+  compareArrays(perm1.pageAccesses, perm2.pageAccesses, 'apexPage');
+  compareArrays(perm1.classAccesses, perm2.classAccesses, 'apexClass');
+  compareArrays(perm1.tabSettings, perm2.tabSettings, 'tab');
+  compareArrays(perm1.recordTypeVisibilities, perm2.recordTypeVisibilities, 'recordType');
 
-    items1.forEach((item1) => {
-      const item2 = items2.find((item) => item.field === item1.field || item.object === item1.object || item.tab === item1.tab);
-      if (item2) {
-        compare(`${key}.${item1.field || item1.object || item1.tab}`, item1, item2);
-      } else {
-        changes.push({
-          path: `${key}.${item1.field || item1.object || item1.tab}`,
-          change: 'Deleted',
-          file: file1Name
-        });
-      }
-    });
-
-    items2.forEach((item2) => {
-      const item1 = items1.find((item) => item.field === item2.field || item.object === item2.object || item.tab === item2.tab);
-      if (!item1) {
-        changes.push({
-          path: `${key}.${item2.field || item2.object || item2.tab}`,
-          change: 'Added',
-          file: file2Name
-        });
-      }
-    });
-  });
-
-  console.log('Changes:', changes); // Log the changes
   return changes;
 };
 
@@ -176,12 +164,12 @@ app.post('/compare', upload.fields([{ name: 'filesSet1' }, { name: 'filesSet2' }
     const perm1 = parsePermissions(xml1);
     const perm2 = parsePermissions(xml2);
 
-    console.log('Permissions Set 1:', perm1); // Log permissions set 1
-    console.log('Permissions Set 2:', perm2); // Log permissions set 2
+    console.log('Permissions Set 1:', JSON.stringify(perm1, null, 2)); // Log permissions set 1
+    console.log('Permissions Set 2:', JSON.stringify(perm2, null, 2)); // Log permissions set 2
 
     const changes = comparePermissions(perm1, perm2, filesSet1[0].originalname, filesSet2[0].originalname);
 
-    console.log('Changes:', changes); // Log the changes
+    console.log('Changes:', JSON.stringify(changes, null, 2)); // Log the changes
 
     const workbook = xlsx.utils.book_new();
     const worksheet = xlsx.utils.json_to_sheet(changes);

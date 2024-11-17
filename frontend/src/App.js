@@ -34,9 +34,10 @@ const App = () => {
       console.log('Response Data:', response.data); // Log the response data
 
       const changesArray = response.data.changes.map((change) => ({
-        path: change.path,
-        change: change.change,
+        path: change.key || 'N/A', // Ensure path is set
+        change: change.type || 'N/A', // Ensure change is set
         file: change.file,
+        exactChange: change.exactChange, // Include exactChange field
       }));
       console.log('Transformed Data:', changesArray); // Log the transformed data
 

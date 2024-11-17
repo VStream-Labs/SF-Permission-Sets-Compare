@@ -84,7 +84,7 @@ const MainContent = ({ data, downloadUrl }) => {
                 <td>{row.path}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
                 <td>{row.file}</td>
-                <td></td> {/* Empty Exact Change column */}
+                <td>{row.exactChange}</td> {/* Display Exact Change column */}
               </tr>
             ))}
           </tbody>
