@@ -113,9 +113,16 @@ const MainContent = ({ data, downloadUrl }) => {
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
-      styles: { fontSize: 8, cellPadding: 3 },
+      styles: { fontSize: 7, cellPadding: 1 },
       headStyles: { fillColor: [22, 160, 133] },
-      startY: 20,
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 35 }
+      },
+      margin: { top: 20, left: 5, right: 5 },
       theme: 'grid'
     });
 
