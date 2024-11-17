@@ -113,15 +113,15 @@ const comparePermissions = (perm1, perm2, fileName1, fileName2) => {
 
     map1.forEach((value, key) => {
       if (!map2.has(key)) {
-        changes.push({ file: fileName1, type: 'Removed', key, value, permissionType });
+        changes.push({ type: 'Removed', key, oldValue: value, permissionType });
       } else if (JSON.stringify(value) !== JSON.stringify(map2.get(key))) {
-        changes.push({ file: fileName1, type: 'Modified', key, oldValue: value, newValue: map2.get(key), permissionType });
+        changes.push({ type: 'Modified', key, oldValue: value, newValue: map2.get(key), permissionType });
       }
     });
 
     map2.forEach((value, key) => {
       if (!map1.has(key)) {
-        changes.push({ file: fileName2, type: 'Added', key, value, permissionType });
+        changes.push({ type: 'Added', key, newValue: value, permissionType });
       }
     });
   };

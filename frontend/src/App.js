@@ -37,7 +37,8 @@ const App = () => {
         permissionType: change.permissionType || 'N/A', // Ensure permissionType is set
         path: change.key || 'N/A', // Ensure path is set
         change: change.type || 'N/A', // Ensure change is set
-        file: change.file,
+        trvValue: change.oldValue || 'N/A',
+        passPortValue: change.newValue || 'N/A',
         exactChange: change.exactChange, // Include exactChange field
       }));
       console.log('Transformed Data:', changesArray); // Log the transformed data

@@ -75,9 +75,8 @@ const MainContent = ({ data, downloadUrl }) => {
               <th onClick={() => requestSort('change')}>
                 Modification Status {getSortIcon('change')}
               </th>
-              <th onClick={() => requestSort('file')}>
-                File {getSortIcon('file')}
-              </th>
+              <th>TRV Value</th>
+              <th>PassPort Value</th>
               <th>Exact Change</th>
             </tr>
           </thead>
@@ -87,8 +86,9 @@ const MainContent = ({ data, downloadUrl }) => {
                 <td>{row.permissionType}</td>
                 <td>{row.path}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
-                <td>{row.file}</td>
-                <td>{row.exactChange}</td> {/* Display Exact Change column */}
+                <td>{row.trvValue ? JSON.stringify(row.trvValue) : 'N/A'}</td>
+                <td>{row.passPortValue ? JSON.stringify(row.passPortValue) : 'N/A'}</td>
+                <td>{row.exactChange ? JSON.stringify(row.exactChange) : 'N/A'}</td>
               </tr>
             ))}
           </tbody>
