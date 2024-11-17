@@ -39,7 +39,6 @@ const App = () => {
         change: change.type || 'N/A', // Ensure change is set
         trvValue: change.oldValue || 'N/A',
         passPortValue: change.newValue || 'N/A',
-        exactChange: change.exactChange, // Include exactChange field
       }));
       console.log('Transformed Data:', changesArray); // Log the transformed data
 
