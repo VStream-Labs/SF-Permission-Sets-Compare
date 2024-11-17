@@ -55,6 +55,42 @@ const MainContent = ({ data, downloadUrl }) => {
     }
   };
 
+  const renderExactChange = (exactChange) => {
+    if (typeof exactChange === 'object' && exactChange !== null) {
+      return (
+        <table>
+          <tbody>
+            {Object.entries(exactChange).map(([key, value]) => (
+              <tr key={key}>
+                <td><strong>{key}</strong></td>
+                <td>{value.toString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
+    return exactChange ? JSON.stringify(exactChange) : 'N/A';
+  };
+
+  const renderValueAsTable = (value) => {
+    if (typeof value === 'object' && value !== null) {
+      return (
+        <table>
+          <tbody>
+            {Object.entries(value).map(([key, val]) => (
+              <tr key={key}>
+                <td><strong>{key}</strong></td>
+                <td>{val.toString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
+    return value ? JSON.stringify(value) : 'N/A';
+  };
+
   return (
     <div className="main-content">
       {downloadUrl && (
@@ -77,7 +113,6 @@ const MainContent = ({ data, downloadUrl }) => {
               </th>
               <th>TRV Value</th>
               <th>PassPort Value</th>
-              <th>Exact Change</th>
             </tr>
           </thead>
           <tbody>
@@ -86,9 +121,8 @@ const MainContent = ({ data, downloadUrl }) => {
                 <td>{row.permissionType}</td>
                 <td>{row.path}</td>
                 <td style={{ color: getChangeColor(row.change) }}>{row.change}</td>
-                <td>{row.trvValue ? JSON.stringify(row.trvValue) : 'N/A'}</td>
-                <td>{row.passPortValue ? JSON.stringify(row.passPortValue) : 'N/A'}</td>
-                <td>{row.exactChange ? JSON.stringify(row.exactChange) : 'N/A'}</td>
+                <td>{renderValueAsTable(row.trvValue)}</td>
+                <td>{renderValueAsTable(row.passPortValue)}</td>
               </tr>
             ))}
           </tbody>
