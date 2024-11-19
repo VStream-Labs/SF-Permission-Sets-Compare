@@ -13,13 +13,25 @@ const upload = multer({ dest: 'uploads/' });
 const parsePermissions = (xml) => {
   const permissions = {
     applicationVisibilities: [],
-    userPermissions: [],
-    objectPermissions: [],
-    fieldPermissions: [],
-    pageAccesses: [],
     classAccesses: [],
+    customMetadataTypeAccesses: [],
+    customPermissions: [],
+    customSettingAccesses: [],
+    description: '',
+    emailRoutingAddressAccesses: [],
+    externalCredentialPrincipalAccesses: [],
+    externalDataSourceAccesses: [],
+    fieldPermissions: [],
+    flowAccesses: [],
+    hasActivationRequired: '',
+    label: '',
+    license: '',
+    objectPermissions: [],
+    pageAccesses: [],
+    recordTypeVisibilities: [],
     tabSettings: [],
-    recordTypeVisibilities: []
+    userLicense: '',
+    userPermissions: []
   };
 
   if (xml.PermissionSet.applicationVisibilities) {
@@ -31,13 +43,102 @@ const parsePermissions = (xml) => {
     });
   }
 
-  if (xml.PermissionSet.userPermissions) {
-    xml.PermissionSet.userPermissions.forEach((item) => {
-      permissions.userPermissions.push({
+  if (xml.PermissionSet.classAccesses) {
+    xml.PermissionSet.classAccesses.forEach((item) => {
+      permissions.classAccesses.push({
+        apexClass: item.apexClass[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.customMetadataTypeAccesses) {
+    xml.PermissionSet.customMetadataTypeAccesses.forEach((item) => {
+      permissions.customMetadataTypeAccesses.push({
         name: item.name[0],
         enabled: item.enabled[0]
       });
     });
+  }
+
+  if (xml.PermissionSet.customPermissions) {
+    xml.PermissionSet.customPermissions.forEach((item) => {
+      permissions.customPermissions.push({
+        name: item.name[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.customSettingAccesses) {
+    xml.PermissionSet.customSettingAccesses.forEach((item) => {
+      permissions.customSettingAccesses.push({
+        name: item.name[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.description) {
+    permissions.description = xml.PermissionSet.description[0];
+  }
+
+  if (xml.PermissionSet.emailRoutingAddressAccesses) {
+    xml.PermissionSet.emailRoutingAddressAccesses.forEach((item) => {
+      permissions.emailRoutingAddressAccesses.push({
+        address: item.address[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.externalCredentialPrincipalAccesses) {
+    xml.PermissionSet.externalCredentialPrincipalAccesses.forEach((item) => {
+      permissions.externalCredentialPrincipalAccesses.push({
+        principal: item.principal[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.externalDataSourceAccesses) {
+    xml.PermissionSet.externalDataSourceAccesses.forEach((item) => {
+      permissions.externalDataSourceAccesses.push({
+        externalDataSource: item.externalDataSource[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.fieldPermissions) {
+    xml.PermissionSet.fieldPermissions.forEach((item) => {
+      permissions.fieldPermissions.push({
+        field: item.field[0],
+        editable: item.editable[0],
+        readable: item.readable[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.flowAccesses) {
+    xml.PermissionSet.flowAccesses.forEach((item) => {
+      permissions.flowAccesses.push({
+        flow: item.flow[0],
+        enabled: item.enabled[0]
+      });
+    });
+  }
+
+  if (xml.PermissionSet.hasActivationRequired) {
+    permissions.hasActivationRequired = xml.PermissionSet.hasActivationRequired[0];
+  }
+
+  if (xml.PermissionSet.label) {
+    permissions.label = xml.PermissionSet.label[0];
+  }
+
+  if (xml.PermissionSet.license) {
+    permissions.license = xml.PermissionSet.license[0];
   }
 
   if (xml.PermissionSet.objectPermissions) {
@@ -54,16 +155,6 @@ const parsePermissions = (xml) => {
     });
   }
 
-  if (xml.PermissionSet.fieldPermissions) {
-    xml.PermissionSet.fieldPermissions.forEach((item) => {
-      permissions.fieldPermissions.push({
-        field: item.field[0],
-        editable: item.editable[0],
-        readable: item.readable[0]
-      });
-    });
-  }
-
   if (xml.PermissionSet.pageAccesses) {
     xml.PermissionSet.pageAccesses.forEach((item) => {
       permissions.pageAccesses.push({
@@ -73,11 +164,11 @@ const parsePermissions = (xml) => {
     });
   }
 
-  if (xml.PermissionSet.classAccesses) {
-    xml.PermissionSet.classAccesses.forEach((item) => {
-      permissions.classAccesses.push({
-        apexClass: item.apexClass[0],
-        enabled: item.enabled[0]
+  if (xml.PermissionSet.recordTypeVisibilities) {
+    xml.PermissionSet.recordTypeVisibilities.forEach((item) => {
+      permissions.recordTypeVisibilities.push({
+        recordType: item.recordType[0],
+        visible: item.visible[0]
       });
     });
   }
@@ -91,11 +182,15 @@ const parsePermissions = (xml) => {
     });
   }
 
-  if (xml.PermissionSet.recordTypeVisibilities) {
-    xml.PermissionSet.recordTypeVisibilities.forEach((item) => {
-      permissions.recordTypeVisibilities.push({
-        recordType: item.recordType[0],
-        visible: item.visible[0]
+  if (xml.PermissionSet.userLicense) {
+    permissions.userLicense = xml.PermissionSet.userLicense[0];
+  }
+
+  if (xml.PermissionSet.userPermissions) {
+    xml.PermissionSet.userPermissions.forEach((item) => {
+      permissions.userPermissions.push({
+        name: item.name[0],
+        enabled: item.enabled[0]
       });
     });
   }
@@ -127,13 +222,35 @@ const comparePermissions = (perm1, perm2, fileName1, fileName2) => {
   };
 
   compareArrays(perm1.applicationVisibilities, perm2.applicationVisibilities, 'application', 'ApplicationVisibility');
-  compareArrays(perm1.userPermissions, perm2.userPermissions, 'name', 'UserPermission');
-  compareArrays(perm1.objectPermissions, perm2.objectPermissions, 'object', 'ObjectPermission');
-  compareArrays(perm1.fieldPermissions, perm2.fieldPermissions, 'field', 'FieldPermission');
-  compareArrays(perm1.pageAccesses, perm2.pageAccesses, 'apexPage', 'PageAccess');
   compareArrays(perm1.classAccesses, perm2.classAccesses, 'apexClass', 'ClassAccess');
-  compareArrays(perm1.tabSettings, perm2.tabSettings, 'tab', 'TabSetting');
+  compareArrays(perm1.customMetadataTypeAccesses, perm2.customMetadataTypeAccesses, 'name', 'CustomMetadataTypeAccess');
+  compareArrays(perm1.customPermissions, perm2.customPermissions, 'name', 'CustomPermission');
+  compareArrays(perm1.customSettingAccesses, perm2.customSettingAccesses, 'name', 'CustomSettingAccess');
+  if (perm1.description !== perm2.description) {
+    changes.push({ type: 'Modified', key: 'description', oldValue: perm1.description, newValue: perm2.description, permissionType: 'Description' });
+  }
+  compareArrays(perm1.emailRoutingAddressAccesses, perm2.emailRoutingAddressAccesses, 'address', 'EmailRoutingAddressAccess');
+  compareArrays(perm1.externalCredentialPrincipalAccesses, perm2.externalCredentialPrincipalAccesses, 'principal', 'ExternalCredentialPrincipalAccess');
+  compareArrays(perm1.externalDataSourceAccesses, perm2.externalDataSourceAccesses, 'externalDataSource', 'ExternalDataSourceAccess');
+  compareArrays(perm1.fieldPermissions, perm2.fieldPermissions, 'field', 'FieldPermission');
+  compareArrays(perm1.flowAccesses, perm2.flowAccesses, 'flow', 'FlowAccess');
+  if (perm1.hasActivationRequired !== perm2.hasActivationRequired) {
+    changes.push({ type: 'Modified', key: 'hasActivationRequired', oldValue: perm1.hasActivationRequired, newValue: perm2.hasActivationRequired, permissionType: 'HasActivationRequired' });
+  }
+  if (perm1.label !== perm2.label) {
+    changes.push({ type: 'Modified', key: 'label', oldValue: perm1.label, newValue: perm2.label, permissionType: 'Label' });
+  }
+  if (perm1.license !== perm2.license) {
+    changes.push({ type: 'Modified', key: 'license', oldValue: perm1.license, newValue: perm2.license, permissionType: 'License' });
+  }
+  compareArrays(perm1.objectPermissions, perm2.objectPermissions, 'object', 'ObjectPermission');
+  compareArrays(perm1.pageAccesses, perm2.pageAccesses, 'apexPage', 'PageAccess');
   compareArrays(perm1.recordTypeVisibilities, perm2.recordTypeVisibilities, 'recordType', 'RecordTypeVisibility');
+  compareArrays(perm1.tabSettings, perm2.tabSettings, 'tab', 'TabSetting');
+  if (perm1.userLicense !== perm2.userLicense) {
+    changes.push({ type: 'Modified', key: 'userLicense', oldValue: perm1.userLicense, newValue: perm2.userLicense, permissionType: 'UserLicense' });
+  }
+  compareArrays(perm1.userPermissions, perm2.userPermissions, 'name', 'UserPermission');
 
   return changes;
 };
